@@ -10,6 +10,9 @@
 #include <Adafruit_VEML7700.h>
 #endif
 
+//TODO: put a define around this
+#include <Adafruit_MCP23X08.h>
+
 #include "interface_task.h"
 #include "semaphore_guard.h"
 #include "util.h"
@@ -25,6 +28,9 @@ HX711 scale;
 #if SK_ALS
 Adafruit_VEML7700 veml = Adafruit_VEML7700();
 #endif
+
+//TODO: put a define around this
+Adafruit_MCP23X08 mcp = Adafruit_MCP23X08();
 
 static PB_SmartKnobConfig configs[] = {
     // int32_t position;
@@ -274,6 +280,15 @@ void InterfaceTask::run() {
         }
     #endif
 
+    if (mcp.begin_I2C()) {
+        mcp.pinMode(PIN_SWITCH, OUTPUT);
+        mcp.digitalWrite(PIN_SWITCH, LOW);
+        haveExtender = true;
+    } else {
+        haveExtender = false;
+        log("GPIO extender not found!");
+    }
+
     applyConfig(configs[0], false);
     motor_task_.addListener(knob_state_queue_);
 
@@ -382,17 +397,20 @@ void InterfaceTask::changeConfig(bool next) {
 void InterfaceTask::updateHardware() {
     // How far button is pressed, in range [0, 1]
     float press_value_unit = 0;
+    iter++;
 
     #if SK_ALS
         const float LUX_ALPHA = 0.005;
         static float lux_avg;
-        float lux = veml.readLux();
-        lux_avg = lux * LUX_ALPHA + lux_avg * (1 - LUX_ALPHA);
-        static uint32_t last_als;
-        if (millis() - last_als > 1000 && strain_calibration_step_ == 0) {
-            snprintf(buf_, sizeof(buf_), "millilux: %.2f", lux*1000);
-            log(buf_);
-            last_als = millis();
+        if (iter % 200 == 0) {
+            float lux = veml.readLux();
+            lux_avg = lux * LUX_ALPHA + lux_avg * (1 - LUX_ALPHA);
+            static uint32_t last_als;
+            if (millis() - last_als > 1000 && strain_calibration_step_ == 0) {
+                snprintf(buf_, sizeof(buf_), "millilux: %.2f", lux*1000);
+                log(buf_);
+                last_als = millis();
+            }
         }
     #endif
 
@@ -479,11 +497,27 @@ void InterfaceTask::setConfiguration(Configuration* configuration) {
 void InterfaceTask::publishState() {
     // Apply local state before publishing to serial
     latest_state_.press_nonce = press_count_;
+    latest_state_.config.pin_nonce = pinNonce;
     current_protocol_->handleState(latest_state_);
 }
 
 void InterfaceTask::applyConfig(PB_SmartKnobConfig& config, bool from_remote) {
     remote_controlled_ = from_remote;
     latest_config_ = config;
+    bool pinNonceChanged = pinNonceSet && pinNonce != config.pin_nonce;
+    pinNonce = config.pin_nonce;
+    pinNonceSet = true;
+    snprintf(buf_, sizeof(buf_), "ApplyConfig: haveExtender: %s", haveExtender ? "true" : "false");
+    log(buf_);
+    if (pinNonceChanged) {
+        log("I2CTask Nonce Updated -- changing pin value");
+        mcp.digitalWrite(PIN_SWITCH, HIGH);
+        delay(100);
+        mcp.digitalWrite(PIN_SWITCH, LOW);
+    }
+    if(!haveExtender) {
+        log("Extender not started");
+    }
+    latest_state_.config.pin_nonce = pinNonce;
     motor_task_.setConfig(config);
 }

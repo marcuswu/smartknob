@@ -61,6 +61,11 @@ class InterfaceTask : public Task<InterfaceTask>, public Logger {
         SerialProtocolPlaintext plaintext_protocol_;
         SerialProtocolProtobuf proto_protocol_;
 
+        int iter = 0;
+        uint8_t pinNonce;
+        bool pinNonceSet = false;
+        bool haveExtender = false;
+
         void changeConfig(bool next);
         void updateHardware();
         void publishState();

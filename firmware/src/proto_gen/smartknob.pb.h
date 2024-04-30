@@ -116,6 +116,9 @@ typedef struct _PB_SmartKnobConfig {
  Hue (0-255) for all 8 ring LEDs, if supported. Note: this will likely be replaced
  with more configurability in a future protocol version. */
     int16_t led_hue;
+    /* *
+ Value that when changed indicates that the pin task should be executed. */
+    uint8_t pin_nonce;
 } PB_SmartKnobConfig;
 
 typedef struct _PB_SmartKnobState {
@@ -210,7 +213,7 @@ extern "C" {
 #define PB_Ack_init_default                      {0}
 #define PB_Log_init_default                      {""}
 #define PB_SmartKnobState_init_default           {0, 0, false, PB_SmartKnobConfig_init_default, 0}
-#define PB_SmartKnobConfig_init_default          {0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, {0, 0, 0, 0, 0}, 0, 0}
+#define PB_SmartKnobConfig_init_default          {0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, {0, 0, 0, 0, 0}, 0, 0, 0}
 #define PB_RequestState_init_default             {0}
 #define PB_PersistentConfiguration_init_default  {0, false, PB_MotorCalibration_init_default, false, PB_StrainCalibration_init_default}
 #define PB_MotorCalibration_init_default         {0, 0, 0, 0}
@@ -220,7 +223,7 @@ extern "C" {
 #define PB_Ack_init_zero                         {0}
 #define PB_Log_init_zero                         {""}
 #define PB_SmartKnobState_init_zero              {0, 0, false, PB_SmartKnobConfig_init_zero, 0}
-#define PB_SmartKnobConfig_init_zero             {0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, {0, 0, 0, 0, 0}, 0, 0}
+#define PB_SmartKnobConfig_init_zero             {0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, {0, 0, 0, 0, 0}, 0, 0, 0}
 #define PB_RequestState_init_zero                {0}
 #define PB_PersistentConfiguration_init_zero     {0, false, PB_MotorCalibration_init_zero, false, PB_StrainCalibration_init_zero}
 #define PB_MotorCalibration_init_zero            {0, 0, 0, 0}
@@ -242,6 +245,7 @@ extern "C" {
 #define PB_SmartKnobConfig_detent_positions_tag  11
 #define PB_SmartKnobConfig_snap_point_bias_tag   12
 #define PB_SmartKnobConfig_led_hue_tag           13
+#define PB_SmartKnobConfig_pin_nonce_tag         14
 #define PB_SmartKnobState_current_position_tag   1
 #define PB_SmartKnobState_sub_position_unit_tag  2
 #define PB_SmartKnobState_config_tag             3
@@ -318,7 +322,8 @@ X(a, STATIC,   SINGULAR, FLOAT,    snap_point,        9) \
 X(a, STATIC,   SINGULAR, STRING,   text,             10) \
 X(a, STATIC,   REPEATED, INT32,    detent_positions,  11) \
 X(a, STATIC,   SINGULAR, FLOAT,    snap_point_bias,  12) \
-X(a, STATIC,   SINGULAR, INT32,    led_hue,          13)
+X(a, STATIC,   SINGULAR, INT32,    led_hue,          13) \
+X(a, STATIC,   SINGULAR, UINT32,   pin_nonce,        14)
 #define PB_SmartKnobConfig_CALLBACK NULL
 #define PB_SmartKnobConfig_DEFAULT NULL
 
@@ -380,10 +385,10 @@ extern const pb_msgdesc_t PB_StrainCalibration_msg;
 #define PB_MotorCalibration_size                 15
 #define PB_PersistentConfiguration_size          47
 #define PB_RequestState_size                     0
-#define PB_SmartKnobConfig_size                  184
-#define PB_SmartKnobState_size                   206
+#define PB_SmartKnobConfig_size                  187
+#define PB_SmartKnobState_size                   209
 #define PB_StrainCalibration_size                22
-#define PB_ToSmartknob_size                      196
+#define PB_ToSmartknob_size                      199
 
 #ifdef __cplusplus
 } /* extern "C" */

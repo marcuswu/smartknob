@@ -198,6 +198,11 @@ message SmartKnobConfig {
      * with more configurability in a future protocol version.
      */
     int32 led_hue = 13 [(nanopb).int_size = IS_16];
+
+    /**
+     * Value that when changed indicates that the pin task should be executed.
+     */
+    uint32 pin_nonce = 14 [(nanopb).int_size = IS_8];
 }
 
 message RequestState {}
